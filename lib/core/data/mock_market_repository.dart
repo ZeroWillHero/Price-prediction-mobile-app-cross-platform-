@@ -80,7 +80,7 @@ class MockMarketRepository {
         ),
         AlertRule(
           id: 2,
-          vegetableName: 'Tomato',
+          vegetableName: 'Leeks',
           comparison: AlertComparison.below,
           threshold: 200,
           enabled: true,
@@ -88,7 +88,7 @@ class MockMarketRepository {
         ),
         AlertRule(
           id: 3,
-          vegetableName: 'Onion',
+          vegetableName: 'Pumpkin',
           comparison: AlertComparison.above,
           threshold: 300,
           enabled: false,
@@ -99,7 +99,7 @@ class MockMarketRepository {
   List<ExplainabilityLayer> get explainabilityLayers => const <ExplainabilityLayer>[
         ExplainabilityLayer(
           icon: Icons.newspaper,
-          color: AppColors.accent,
+          color: AppColors.amber,
           titleEn: 'Market news',
           titleSi: 'වෙළඳපල ප්‍රවෘත්ති',
           description:
@@ -138,7 +138,7 @@ class MockMarketRepository {
       TrendPoint(index: 10, label: 'Jan', value: 305),
       TrendPoint(index: 11, label: 'Feb', value: 320),
     ],
-    'Tomato': <TrendPoint>[
+    'Leeks': <TrendPoint>[
       TrendPoint(index: 0, label: 'Mar', value: 200),
       TrendPoint(index: 1, label: 'Apr', value: 215),
       TrendPoint(index: 2, label: 'May', value: 210),
@@ -159,7 +159,7 @@ class MockMarketRepository {
       HistoryEvent(emoji: '🔴', title: 'Fuel crisis', period: 'Feb 2024', deltaLabel: '+8%'),
       HistoryEvent(emoji: '🌧️', title: 'Heavy monsoon', period: 'Mar 2024', deltaLabel: '+12%'),
     ],
-    'Tomato': <HistoryEvent>[
+    'Leeks': <HistoryEvent>[
       HistoryEvent(emoji: '🚨', title: 'Transport delay', period: 'Apr 2024', deltaLabel: '+9%'),
       HistoryEvent(emoji: '🌧️', title: 'Rainfall spike', period: 'May 2024', deltaLabel: '+11%'),
     ],
@@ -174,15 +174,15 @@ class MockMarketRepository {
         actualPriceLabel: 'Rs 355',
       ),
       AlertHistoryEntry(
-        vegetableName: 'Tomato',
+        vegetableName: 'Leeks',
         summary: 'dropped below Rs 200/kg',
         whenLabel: '14 Jun, 9:10 AM',
         actualPriceLabel: 'Rs 195',
       ),
     ],
-    'Tomato': <AlertHistoryEntry>[
+    'Leeks': <AlertHistoryEntry>[
       AlertHistoryEntry(
-        vegetableName: 'Tomato',
+        vegetableName: 'Leeks',
         summary: 'exceeded Rs 250/kg',
         whenLabel: '10 Jun, 7:00 AM',
         actualPriceLabel: 'Rs 252',
@@ -199,14 +199,14 @@ class MockMarketRepository {
       chronosValues: <double?>[null, null, null, null, null, null, null, null, 318, 326, 332, 340],
       hybridValues: <double?>[null, null, null, null, null, null, null, null, 318, 330, 339, 345],
       influences: <InfluenceFactor>[
-        InfluenceFactor(icon: Icons.newspaper, color: AppColors.accent, weightLabel: '40%', title: 'News & crisis'),
+        InfluenceFactor(icon: Icons.newspaper, color: AppColors.amber, weightLabel: '40%', title: 'News & crisis'),
         InfluenceFactor(icon: Icons.psychology, color: AppColors.info, weightLabel: '35%', title: 'Seasonal'),
         InfluenceFactor(icon: Icons.local_gas_station, color: AppColors.success, weightLabel: '25%', title: 'Fuel prices'),
       ],
       insight:
           'Carrot prices usually climb after rainy seasons. The model sees that pattern across 25 years of market data.',
     ),
-    'Tomato': _ForecastSeed(
+    'Leeks': _ForecastSeed(
       predictedPrice: 255,
       lowPrice: 240,
       highPrice: 268,
@@ -214,14 +214,14 @@ class MockMarketRepository {
       chronosValues: <double?>[null, null, null, null, null, null, null, null, 238, 244, 249, 252],
       hybridValues: <double?>[null, null, null, null, null, null, null, null, 240, 248, 252, 255],
       influences: <InfluenceFactor>[
-        InfluenceFactor(icon: Icons.newspaper, color: AppColors.accent, weightLabel: '45%', title: 'Transport news'),
+        InfluenceFactor(icon: Icons.newspaper, color: AppColors.amber, weightLabel: '45%', title: 'Transport news'),
         InfluenceFactor(icon: Icons.psychology, color: AppColors.info, weightLabel: '30%', title: 'Seasonal shift'),
         InfluenceFactor(icon: Icons.local_gas_station, color: AppColors.success, weightLabel: '25%', title: 'Fuel costs'),
       ],
       insight:
-          'Tomato is highly seasonal and sensitive to transport fuel costs, so short-term swings can be sharper.',
+          'Leeks are highly seasonal and sensitive to transport fuel costs, so short-term swings can be sharper.',
     ),
-    'Potato': _ForecastSeed(
+    'Brinjal': _ForecastSeed(
       predictedPrice: 186,
       lowPrice: 176,
       highPrice: 194,
@@ -229,13 +229,13 @@ class MockMarketRepository {
       chronosValues: <double?>[null, null, null, null, null, null, null, null, 181, 183, 185, 186],
       hybridValues: <double?>[null, null, null, null, null, null, null, null, 181, 184, 185, 186],
       influences: <InfluenceFactor>[
-        InfluenceFactor(icon: Icons.newspaper, color: AppColors.accent, weightLabel: '20%', title: 'Market news'),
+        InfluenceFactor(icon: Icons.newspaper, color: AppColors.amber, weightLabel: '20%', title: 'Market news'),
         InfluenceFactor(icon: Icons.psychology, color: AppColors.info, weightLabel: '50%', title: 'Harvest timing'),
         InfluenceFactor(icon: Icons.local_gas_station, color: AppColors.success, weightLabel: '30%', title: 'Logistics'),
       ],
-      insight: 'Potato stays stable through most of the year, easing slightly after the main harvest window.',
+      insight: 'Brinjal stays stable through most of the year, easing slightly after the main harvest window.',
     ),
-    'Onion': _ForecastSeed(
+    'Pumpkin': _ForecastSeed(
       predictedPrice: 294,
       lowPrice: 286,
       highPrice: 305,
@@ -243,11 +243,11 @@ class MockMarketRepository {
       chronosValues: <double?>[null, null, null, null, null, null, null, null, 291, 292, 293, 294],
       hybridValues: <double?>[null, null, null, null, null, null, null, null, 290, 292, 293, 294],
       influences: <InfluenceFactor>[
-        InfluenceFactor(icon: Icons.newspaper, color: AppColors.accent, weightLabel: '35%', title: 'Import news'),
+        InfluenceFactor(icon: Icons.newspaper, color: AppColors.amber, weightLabel: '35%', title: 'Import news'),
         InfluenceFactor(icon: Icons.psychology, color: AppColors.info, weightLabel: '40%', title: 'Stock levels'),
         InfluenceFactor(icon: Icons.local_gas_station, color: AppColors.success, weightLabel: '25%', title: 'Fuel costs'),
       ],
-      insight: 'Onion tracks import patterns closely and is cooling as fresh local stock reaches the markets.',
+      insight: 'Pumpkin tracks import patterns closely and is cooling as fresh local stock reaches the markets.',
     ),
     'Cabbage': _ForecastSeed(
       predictedPrice: 155,
@@ -257,11 +257,25 @@ class MockMarketRepository {
       chronosValues: <double?>[null, null, null, null, null, null, null, null, 151, 153, 154, 155],
       hybridValues: <double?>[null, null, null, null, null, null, null, null, 151, 153, 154, 155],
       influences: <InfluenceFactor>[
-        InfluenceFactor(icon: Icons.newspaper, color: AppColors.accent, weightLabel: '15%', title: 'Market news'),
+        InfluenceFactor(icon: Icons.newspaper, color: AppColors.amber, weightLabel: '15%', title: 'Market news'),
         InfluenceFactor(icon: Icons.psychology, color: AppColors.info, weightLabel: '60%', title: 'Stable demand'),
         InfluenceFactor(icon: Icons.local_gas_station, color: AppColors.success, weightLabel: '25%', title: 'Distribution'),
       ],
       insight: 'Cabbage is one of the calmest movers, with small steady shifts week to week.',
+    ),
+    'Snake Gourd': _ForecastSeed(
+      predictedPrice: 165,
+      lowPrice: 155,
+      highPrice: 175,
+      actualValues: <double?>[150, 154, 152, 158, 160, 157, 162, 163, 161, 164, 165, 165],
+      chronosValues: <double?>[null, null, null, null, null, null, null, null, 161, 163, 164, 165],
+      hybridValues: <double?>[null, null, null, null, null, null, null, null, 161, 163, 164, 165],
+      influences: <InfluenceFactor>[
+        InfluenceFactor(icon: Icons.newspaper, color: AppColors.amber, weightLabel: '25%', title: 'Market news'),
+        InfluenceFactor(icon: Icons.psychology, color: AppColors.info, weightLabel: '45%', title: 'Seasonal'),
+        InfluenceFactor(icon: Icons.local_gas_station, color: AppColors.success, weightLabel: '30%', title: 'Distribution'),
+      ],
+      insight: 'Snake Gourd demand holds steady with mild seasonal upticks during festival periods.',
     ),
   };
 
@@ -276,39 +290,47 @@ class MockMarketRepository {
       accentColor: AppColors.accent,
     ),
     VegetableSummary(
-      name: 'Tomato',
-      currentPrice: 240,
-      changePercent: 8,
-      description:
-          'Tomato is highly seasonal and sensitive to transport fuel costs — expect sharper short-term swings.',
-      sparkline: <double>[200, 215, 210, 225, 230, 222, 240],
-      accentColor: AppColors.info,
-    ),
-    VegetableSummary(
-      name: 'Potato',
-      currentPrice: 180,
-      changePercent: -2,
-      description:
-          'Potato stays stable through most of the year, easing slightly after the main harvest window.',
-      sparkline: <double>[190, 188, 185, 182, 186, 184, 180],
-      accentColor: AppColors.success,
-    ),
-    VegetableSummary(
-      name: 'Onion',
-      currentPrice: 290,
-      changePercent: -3,
-      description:
-          'Onion tracks import patterns closely and is cooling as fresh local stock reaches the markets.',
-      sparkline: <double>[310, 305, 300, 298, 295, 292, 290],
-      accentColor: AppColors.primary,
-    ),
-    VegetableSummary(
       name: 'Cabbage',
       currentPrice: 150,
       changePercent: 1,
       description: 'Cabbage is one of the calmest movers — small, steady shifts week to week.',
       sparkline: <double>[146, 148, 145, 149, 150, 148, 150],
       accentColor: AppColors.primaryDark,
+    ),
+    VegetableSummary(
+      name: 'Leeks',
+      currentPrice: 240,
+      changePercent: 8,
+      description:
+          'Leeks are highly seasonal and sensitive to transport fuel costs — expect sharper short-term swings.',
+      sparkline: <double>[200, 215, 210, 225, 230, 222, 240],
+      accentColor: AppColors.info,
+    ),
+    VegetableSummary(
+      name: 'Brinjal',
+      currentPrice: 180,
+      changePercent: -2,
+      description:
+          'Brinjal stays stable through most of the year, easing slightly after the main harvest window.',
+      sparkline: <double>[190, 188, 185, 182, 186, 184, 180],
+      accentColor: AppColors.success,
+    ),
+    VegetableSummary(
+      name: 'Pumpkin',
+      currentPrice: 290,
+      changePercent: -3,
+      description:
+          'Pumpkin tracks import patterns closely and is cooling as fresh local stock reaches the markets.',
+      sparkline: <double>[310, 305, 300, 298, 295, 292, 290],
+      accentColor: AppColors.primary,
+    ),
+    VegetableSummary(
+      name: 'Snake Gourd',
+      currentPrice: 165,
+      changePercent: 3,
+      description: 'Snake Gourd demand holds steady with mild seasonal upticks during festival periods.',
+      sparkline: <double>[150, 154, 152, 158, 160, 157, 162],
+      accentColor: AppColors.amber,
     ),
   ];
 

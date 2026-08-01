@@ -57,13 +57,13 @@ class ForecastLineChart extends StatelessWidget {
   const ForecastLineChart({
     super.key,
     required this.actual,
-    required this.chronos,
+    required this.xgboost,
     required this.hybrid,
     required this.labels,
   });
 
   final List<TrendPoint> actual;
-  final List<TrendPoint> chronos;
+  final List<TrendPoint> xgboost;
   final List<TrendPoint> hybrid;
   final List<String> labels;
 
@@ -71,13 +71,13 @@ class ForecastLineChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final double minY = <double>[
       ...actual.map((TrendPoint point) => point.value),
-      ...chronos.map((TrendPoint point) => point.value),
+      ...xgboost.map((TrendPoint point) => point.value),
       ...hybrid.map((TrendPoint point) => point.value),
     ].reduce((double a, double b) => a < b ? a : b);
 
     final double maxY = <double>[
       ...actual.map((TrendPoint point) => point.value),
-      ...chronos.map((TrendPoint point) => point.value),
+      ...xgboost.map((TrendPoint point) => point.value),
       ...hybrid.map((TrendPoint point) => point.value),
     ].reduce((double a, double b) => a > b ? a : b);
 
@@ -132,7 +132,7 @@ class ForecastLineChart extends StatelessWidget {
               showDots: false,
             ),
             _bar(
-              chronos,
+              xgboost,
               const Color(0xFF8B5CF6),
               2,
               dashArray: <int>[6, 5],

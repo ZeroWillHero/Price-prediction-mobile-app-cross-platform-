@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-
 import '../../../core/state/app_controller.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/price_formatters.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/mini_line_chart.dart';
@@ -19,176 +20,528 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AppController controller = context.watch<AppController>();
+    final controller = context.watch<AppController>();
     final featured = controller.featuredVegetable;
     final trending = controller.repository.trendingVegetables;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: EdgeInsets.zero,
       children: <Widget>[
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text('Welcome back, Ravi', style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(height: 4),
-                  Text('15 June 2026', style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-            ),
-            const Icon(Icons.notifications_outlined),
-          ],
+        _HomeHeader(
+          onSettings: () => context.read<AppController>().setTab(AppTab.settings),
         ),
-        const SizedBox(height: 16),
-        AppCard(
-          onTap: () {
-            context.read<AppController>().selectVegetable(featured.name);
-            context.read<AppController>().setTab(AppTab.predict);
-          },
-          padding: const EdgeInsets.all(18),
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.14),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Row(
-                children: <Widget>[
-                  const Chip(label: Text('Biggest mover today')),
-                  const Spacer(),
-                  Text(
-                    featured.changePercent >= 0 ? 'Uptrend' : 'Downtrend',
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Center(
-                child: VegetableAvatar(
-                  name: featured.name,
-                  color: featured.accentColor,
-                  size: 100,
+              // Welcome
+              RichText(
+                text: TextSpan(
+                  style: GoogleFonts.poppins(fontSize: 26),
+                  children: <InlineSpan>[
+                    TextSpan(
+                      text: 'Welcome back, ',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'Ravi ',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.text,
+                      ),
+                    ),
+                    const TextSpan(text: '👋'),
+                  ],
                 ),
               ),
-              const SizedBox(height: 14),
-              Text(featured.name, style: Theme.of(context).textTheme.headlineMedium),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Row(
                 children: <Widget>[
-                  Text(formatRs(featured.currentPrice), style: Theme.of(context).textTheme.titleMedium),
+                  const Text(
+                    '15 June 2026',
+                    style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                  ),
                   const SizedBox(width: 10),
-                  PriceBadge(
-                    label: featured.changePercent >= 0
-                        ? '+${featured.changePercent.toStringAsFixed(0)}%'
-                        : '${featured.changePercent.toStringAsFixed(0)}%',
-                    positive: featured.changePercent >= 0,
+                  _PillBadge(
+                    icon: Icons.wifi_tethering,
+                    label: 'Market stable',
+                    color: AppColors.accent,
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              Text(
-                featured.description,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        SectionHeader(icon: Icons.trending_up, title: 'Trending this week'),
-        const SizedBox(height: 10),
-        ...trending.map(
-          (vegetable) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: AppCard(
-              onTap: () {
-                context.read<AppController>().selectVegetable(vegetable.name);
-                context.read<AppController>().setTab(AppTab.predict);
-              },
-              child: Row(
-                children: <Widget>[
-                  VegetableAvatar(name: vegetable.name, color: vegetable.accentColor, size: 44),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          vegetable.name,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+              const SizedBox(height: 20),
+
+              // Featured fire card
+              AppCard(
+                variant: AppCardVariant.fire,
+                padding: EdgeInsets.zero,
+                radius: 24,
+                onTap: () {
+                  context.read<AppController>().selectVegetable(featured.name);
+                  context.read<AppController>().setTab(AppTab.predict);
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Stack(
+                    children: <Widget>[
+                      Positioned.fill(
+                        top: 12,
+                        child: Center(
+                          child: Text(
+                            featured.name,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(
+                              fontSize: 90,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0x1506180E),
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(formatRs(vegetable.currentPrice), style: Theme.of(context).textTheme.bodySmall),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                _PillBadge(
+                                  icon: Icons.local_fire_department,
+                                  label: 'Biggest mover today',
+                                  color: const Color(0xFF06180E),
+                                  bg: const Color(0x40FFFFFF),
+                                ),
+                                Text(
+                                  _evoLabel(featured.changePercent),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF06180E),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Center(
+                              child: _HeroChip(name: featured.name, size: 116),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: <Widget>[
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      featured.name,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFF06180E),
+                                        height: 1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      formatRs(featured.currentPrice),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF06180E),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xD2041209),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      Icon(
+                                        featured.changePercent >= 0
+                                            ? Icons.arrow_drop_up
+                                            : Icons.arrow_drop_down,
+                                        color: const Color(0xFFFDB022),
+                                        size: 18,
+                                      ),
+                                      Text(
+                                        formatPercent(featured.changePercent),
+                                        style: GoogleFonts.inter(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xFFFDB022),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Trending
+              SectionHeader(
+                icon: Icons.trending_up,
+                title: 'Trending this week',
+                actionLabel: 'See all',
+              ),
+              const SizedBox(height: 12),
+              ...trending.map(
+                (v) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: AppCard(
+                    padding: const EdgeInsets.all(12),
+                    onTap: () {
+                      context.read<AppController>().selectVegetable(v.name);
+                      context.read<AppController>().setTab(AppTab.predict);
+                    },
+                    child: Row(
+                      children: <Widget>[
+                        VegetableAvatar(
+                          name: v.name,
+                          color: v.accentColor,
+                          size: 50,
+                          glow: true,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                v.name,
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                formatRs(v.currentPrice),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          width: 68,
+                          child: MiniLineChart(
+                            series: v.sparkline,
+                            color: v.changePercent >= 0
+                                ? AppColors.accent
+                                : AppColors.danger,
+                            height: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        PriceBadge(
+                          label: formatPercent(v.changePercent),
+                          positive: v.changePercent >= 0,
+                          trend: v.changePercent > 0
+                              ? TrendDirection.up
+                              : v.changePercent < 0
+                                  ? TrendDirection.down
+                                  : TrendDirection.flat,
+                        ),
                       ],
                     ),
                   ),
-                  SizedBox(
-                    width: 72,
-                    child: MiniLineChart(series: vegetable.sparkline, color: vegetable.accentColor),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Alerts
+              SectionHeader(
+                icon: Icons.notifications_active,
+                title: 'Active alerts',
+                actionLabel: 'Manage',
+                onAction: () => context.read<AppController>().setTab(AppTab.alerts),
+              ),
+              const SizedBox(height: 12),
+              AppCard(
+                variant: AppCardVariant.glow,
+                onTap: () => context.read<AppController>().setTab(AppTab.alerts),
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        gradient: const LinearGradient(
+                          colors: <Color>[AppColors.amber, Color(0xFFE9651C)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: AppColors.amber.withOpacity(0.36),
+                            blurRadius: 12,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.campaign,
+                        size: 22,
+                        color: Color(0xFF1A0F02),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            '2 alerts triggered today',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Carrot hit Rs 350/kg',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right,
+                      size: 20,
+                      color: AppColors.textMuted,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+
+              // Quick actions
+              FilledButton.icon(
+                onPressed: () {
+                  context
+                      .read<AppController>()
+                      .selectVegetable(controller.repository.vegetables.first.name);
+                  context.read<AppController>().setTab(AppTab.predict);
+                },
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: const Text('Predict prices'),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () =>
+                          context.read<AppController>().setTab(AppTab.history),
+                      icon: const Icon(Icons.show_chart, size: 18),
+                      label: const Text('History'),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  PriceBadge(
-                    label: vegetable.changePercent >= 0
-                        ? '+${vegetable.changePercent.toStringAsFixed(0)}%'
-                        : '${vegetable.changePercent.toStringAsFixed(0)}%',
-                    positive: vegetable.changePercent >= 0,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onOpenExplainability,
+                      icon: const Icon(Icons.account_tree, size: 18),
+                      label: const Text('How it works'),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SectionHeader(
-          icon: Icons.notifications,
-          title: 'Active alerts',
-          actionLabel: 'Manage',
-          onAction: () => context.read<AppController>().setTab(AppTab.alerts),
-        ),
-        const SizedBox(height: 10),
-        AppCard(
-          onTap: () => context.read<AppController>().setTab(AppTab.alerts),
-          child: Row(
-            children: <Widget>[
-              Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.secondary),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text('2 alerts triggered today\nCarrot hit Rs 350/kg'),
-              ),
-              const Icon(Icons.chevron_right),
             ],
           ),
         ),
-        const SizedBox(height: 18),
-        SectionHeader(icon: Icons.flash_on, title: 'Quick actions'),
-        const SizedBox(height: 10),
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: FilledButton(
-                onPressed: () {
-                  context.read<AppController>().selectVegetable(controller.repository.vegetables.first.name);
-                  context.read<AppController>().setTab(AppTab.predict);
-                },
-                child: const Text('Predict prices'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => context.read<AppController>().setTab(AppTab.history),
-                child: const Text('History'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        OutlinedButton(
-          onPressed: onOpenExplainability,
-          child: const Text('How it works'),
-        ),
       ],
+    );
+  }
+}
+
+String _evoLabel(double change) {
+  if (change >= 8) return 'Fire';
+  if (change >= 4) return 'Hot';
+  if (change >= 0) return 'Mild';
+  if (change >= -3) return 'Cool';
+  return 'Calm';
+}
+
+// ── Sub-widgets ─────────────────────────────────────────────────────────────
+
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader({required this.onSettings});
+
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 14, 14, 10),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.accent.withOpacity(0.16),
+              border: Border.all(color: AppColors.accent.withOpacity(0.36)),
+            ),
+            child: const Center(
+              child: Text('🌿', style: TextStyle(fontSize: 18)),
+            ),
+          ),
+          const Spacer(),
+          Stack(
+            children: <Widget>[
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.textSecondary,
+                ),
+                onPressed: () {},
+                iconSize: 22,
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.danger,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          GestureDetector(
+            onTap: onSettings,
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: <Color>[AppColors.accent, AppColors.primary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: const Center(
+                child: Text(
+                  'R',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+    );
+  }
+}
+
+class _PillBadge extends StatelessWidget {
+  const _PillBadge({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.bg,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color? bg;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg ?? color.withOpacity(0.13),
+        borderRadius: BorderRadius.circular(999),
+        border: bg != null ? null : Border.all(color: color.withOpacity(0.22)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroChip extends StatelessWidget {
+  const _HeroChip({required this.name, required this.size});
+
+  final String name;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final String? imagePath = vegImages[name];
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0x30FFFFFF),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.white.withOpacity(0.22),
+            blurRadius: 30,
+            spreadRadius: 8,
+          ),
+        ],
+      ),
+      child: Center(
+        child: imagePath != null
+            ? SizedBox(
+                width: size * 0.58,
+                height: size * 0.58,
+                child: Image.asset(imagePath, fit: BoxFit.contain),
+              )
+            : Text(
+                name.isNotEmpty ? name.substring(0, 1) : '?',
+                style: TextStyle(fontSize: size * 0.52),
+              ),
+      ),
     );
   }
 }
