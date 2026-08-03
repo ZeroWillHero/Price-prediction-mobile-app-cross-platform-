@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/state/app_controller.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../alerts/presentation/alerts_screen.dart';
 import '../../explainability/presentation/explainability_screen.dart';
 import '../../history/presentation/history_screen.dart';
@@ -14,7 +15,7 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AppController controller = context.watch<AppController>();
+    final controller = context.watch<AppController>();
     final List<Widget> pages = <Widget>[
       HomeScreen(onOpenExplainability: () => _openExplainability(context)),
       PredictScreen(onOpenExplainability: () => _openExplainability(context)),
@@ -30,18 +31,45 @@ class AppShell extends StatelessWidget {
           children: pages,
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: controller.tab.index,
-        onDestinationSelected: (int index) {
-          context.read<AppController>().setTab(AppTab.values[index]);
-        },
-        destinations: const <NavigationDestination>[
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.auto_awesome_outlined), selectedIcon: Icon(Icons.auto_awesome), label: 'Predict'),
-          NavigationDestination(icon: Icon(Icons.show_chart_outlined), selectedIcon: Icon(Icons.show_chart), label: 'History'),
-          NavigationDestination(icon: Icon(Icons.notifications_outlined), selectedIcon: Icon(Icons.notifications), label: 'Alerts'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(color: AppColors.outline, width: 1),
+          ),
+        ),
+        child: NavigationBar(
+          selectedIndex: controller.tab.index,
+          onDestinationSelected: (int index) {
+            context.read<AppController>().setTab(AppTab.values[index]);
+          },
+          destinations: const <NavigationDestination>[
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.auto_awesome_outlined),
+              selectedIcon: Icon(Icons.auto_awesome),
+              label: 'Predict',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.show_chart_outlined),
+              selectedIcon: Icon(Icons.show_chart),
+              label: 'History',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.notifications_outlined),
+              selectedIcon: Icon(Icons.notifications),
+              label: 'Alerts',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings),
+              label: 'Settings',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -49,7 +77,7 @@ class AppShell extends StatelessWidget {
   void _openExplainability(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (BuildContext context) => const ExplainabilityScreen(),
+        builder: (_) => const ExplainabilityScreen(),
       ),
     );
   }

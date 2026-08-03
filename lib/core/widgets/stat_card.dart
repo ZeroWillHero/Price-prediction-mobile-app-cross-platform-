@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../theme/app_colors.dart';
 
 class StatCard extends StatelessWidget {
   const StatCard({
@@ -18,25 +21,27 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color resolved = color ?? Theme.of(context).colorScheme.onSurface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color resolved = color ?? AppColors.textSecondary;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: isDark ? AppColors.surface : Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Theme.of(context).dividerColor),
+        border: Border.all(color: isDark ? AppColors.outline : AppColors.outlineLight),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
             children: <Widget>[
-              Icon(icon, size: 15, color: resolved),
+              Icon(icon, size: 14, color: resolved),
               const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelMedium,
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -44,15 +49,16 @@ class StatCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: resolved,
-                ),
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: resolved,
+            ),
           ),
           const SizedBox(height: 3),
           Text(
             subLabel,
-            style: Theme.of(context).textTheme.labelSmall,
+            style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
           ),
         ],
       ),
