@@ -1,20 +1,19 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/models/forecast_models.dart';
+import '../../../core/models/dated_price.dart';
 import '../../../core/state/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/price_formatters.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../core/widgets/mini_line_chart.dart';
 import '../../../core/widgets/price_badge.dart';
+import '../../../core/widgets/price_date_explorer.dart';
 import '../../../core/widgets/segmented_tab.dart';
 import '../../../core/widgets/vegetable_avatar.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
-class PredictScreen extends StatefulWidget {
+class PredictScreen extends StatelessWidget {
   const PredictScreen({
     super.key,
     required this.onOpenExplainability,
@@ -23,28 +22,21 @@ class PredictScreen extends StatefulWidget {
   final VoidCallback onOpenExplainability;
 
   @override
-  State<PredictScreen> createState() => _PredictScreenState();
-}
-
-class _PredictScreenState extends State<PredictScreen> {
-  bool _loading = false;
-  bool _showResult = false;
-
-  @override
   Widget build(BuildContext context) {
     final controller = context.watch<AppController>();
     final vegetable = controller.selectedVegetable;
     final forecast = controller.repository.forecastFor(
-      vegetable.name,
+      vegetable.id,
       controller.selectedHorizon,
     );
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return ListView(
       padding: EdgeInsets.zero,
       children: <Widget>[
         // Header
-        _PredictHeader(onBack: null),
+        _PredictHeader(onBack: null, title: t.navPredict),
 
         // Hero section
         Padding(
@@ -87,24 +79,28 @@ class _PredictScreenState extends State<PredictScreen> {
                       ],
                     ),
                     child: Center(
-                      child: vegImages[vegetable.name] != null
+                      child: vegImages[vegetable.id] != null
                           ? SizedBox(
                               width: 96,
                               height: 96,
                               child: Image.asset(
-                                vegImages[vegetable.name]!,
+                                vegImages[vegetable.id]!,
                                 fit: BoxFit.contain,
                               ),
                             )
                           : Text(
-                              vegetable.name.isNotEmpty ? vegetable.name.substring(0, 1) : '?',
+                              vegetable.name.isNotEmpty
+                                  ? vegetable.name.substring(0, 1)
+                                  : '?',
                               style: const TextStyle(fontSize: 82),
                             ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   // Pill
-                  _Pill(label: '${_evoLabel(vegetable.changePercent)} · live price'),
+                  _Pill(
+                      label:
+                          '${_evoLabel(t, vegetable.changePercent)} · ${t.livePriceSuffix}'),
                   const SizedBox(height: 10),
                   // Name
                   Text(
@@ -129,7 +125,8 @@ class _PredictScreenState extends State<PredictScreen> {
                       ),
                       const SizedBox(width: 10),
                       PriceBadge(
-                        label: '${formatPercent(vegetable.changePercent)} today',
+                        label:
+                            '${formatPercent(vegetable.changePercent)} ${t.todaySuffix}',
                         positive: vegetable.changePercent >= 0,
                         trend: vegetable.changePercent > 0
                             ? TrendDirection.up
@@ -160,9 +157,9 @@ class _PredictScreenState extends State<PredictScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               // Horizon
-              const Text(
-                'How far ahead do you want to predict?',
-                style: TextStyle(
+              Text(
+                t.predictHorizonQuestion,
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   color: AppColors.text,
                   fontSize: 15,
@@ -175,210 +172,121 @@ class _PredictScreenState extends State<PredictScreen> {
                 onSelected: (h) => context.read<AppController>().setHorizon(h),
               ),
               const SizedBox(height: 8),
-              const Row(
+              Row(
                 children: <Widget>[
-                  Icon(Icons.info_outline, size: 13, color: AppColors.textMuted),
-                  SizedBox(width: 5),
+                  const Icon(Icons.info_outline,
+                      size: 13, color: AppColors.textMuted),
+                  const SizedBox(width: 5),
                   Text(
-                    'Longer forecasts are less accurate.',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                    t.predictLongerLessAccurate,
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textMuted),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-              // Predict button
-              FilledButton.icon(
-                onPressed: _loading
-                    ? null
-                    : () {
-                        setState(() {
-                          _loading = true;
-                          _showResult = false;
-                        });
-                        Timer(const Duration(milliseconds: 1100), () {
-                          if (!mounted) return;
-                          setState(() {
-                            _loading = false;
-                            _showResult = true;
-                          });
-                        });
-                      },
-                icon: _loading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Color(0xFF06180E),
-                        ),
-                      )
-                    : const Icon(Icons.auto_awesome, size: 18),
-                label: Text(_loading ? 'Predicting…' : 'Predict now'),
+              // Browse the same prediction (or any other future date) —
+              // past dates aren't offered here, only present week onward.
+              PriceDateExplorer(
+                points: _fromCurrentWeek(controller.repository.pricesFor(vegetable.id)),
+                initialDate: DateTime.now().add(
+                  Duration(days: 7 * _weeksFor(controller.selectedHorizon)),
+                ),
               ),
+              const SizedBox(height: 14),
 
-              if (_showResult) ...<Widget>[
-                const SizedBox(height: 18),
-
-                // Prediction card
-                AppCard(
-                  variant: AppCardVariant.glow,
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        'Predicted price · ${controller.selectedHorizon}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        formatRs(forecast.predictedPrice),
-                        style: GoogleFonts.poppins(
-                          fontSize: 48,
-                          fontWeight: FontWeight.w800,
+              // About this prediction
+              AppCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        const Icon(
+                          Icons.account_tree,
+                          size: 16,
                           color: AppColors.accent,
-                          height: 1.1,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Expected range: Rs ${forecast.lowPrice.toStringAsFixed(0)} – Rs ${forecast.highPrice.toStringAsFixed(0)} (80% confidence)',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
+                        const SizedBox(width: 8),
+                        Text(
+                          t.predictionInfo,
+                          style: Theme.of(context).textTheme.titleSmall,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                // Chart card
-                AppCard(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      ForecastLineChart(
-                        actual: forecast.actualSeries,
-                        xgboost: forecast.chronosSeries,
-                        hybrid: forecast.hybridSeries,
-                        labels: const <String>[
-                          'W1', 'W2', 'W3', 'W4', 'W5', 'W6',
-                          'W7', 'W8', 'W9', 'W10', 'W11', 'W12',
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 16,
-                        runSpacing: 6,
-                        children: const <Widget>[
-                          _ChartLegend(
-                            color: AppColors.chartActual,
-                            label: 'Actual',
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: _InfoStat(
+                            icon: Icons.psychology,
+                            color: AppColors.info,
+                            value: modelFamilyLabel(forecast.modelFamily),
+                            label: t.predictionMethod,
                           ),
-                          _ChartLegend(
-                            color: AppColors.chartChronos,
-                            label: 'XGBoost',
-                            dashed: true,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _InfoStat(
+                            icon: Icons.rule,
+                            color: AppColors.success,
+                            value:
+                                'Rs ${forecast.typicalErrorRs.toStringAsFixed(0)}',
+                            label: t.typicalAccuracy,
                           ),
-                          _ChartLegend(
-                            color: AppColors.chartHybrid,
-                            label: 'Hybrid',
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                // Influence card
-                AppCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Row(
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    GestureDetector(
+                      onTap: onOpenExplainability,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
+                          Text(
+                            t.seeHowModelWorks,
+                            style: const TextStyle(
+                              color: AppColors.accent,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
                           const Icon(
-                            Icons.account_tree,
-                            size: 16,
+                            Icons.arrow_forward,
+                            size: 15,
                             color: AppColors.accent,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'What influenced this prediction?',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
                         ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: forecast.influences
-                            .map(
-                              (f) => Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 6),
-                                  child: _InfluenceCard(factor: f),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                      const SizedBox(height: 14),
-                      GestureDetector(
-                        onTap: widget.onOpenExplainability,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            const Text(
-                              'See how the model works',
-                              style: TextStyle(
-                                color: AppColors.accent,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.arrow_forward,
-                              size: 15,
-                              color: AppColors.accent,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.share_outlined, size: 18),
-                        label: const Text('Share'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () =>
-                            context.read<AppController>().setTab(AppTab.history),
-                        icon: const Icon(Icons.show_chart, size: 18),
-                        label: const Text('History'),
                       ),
                     ),
                   ],
                 ),
-              ],
+              ),
+              const SizedBox(height: 14),
+
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.share_outlined, size: 18),
+                      label: Text(t.share),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () =>
+                          context.read<AppController>().setTab(AppTab.history),
+                      icon: const Icon(Icons.show_chart, size: 18),
+                      label: Text(t.navHistory),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 20),
             ],
           ),
@@ -388,20 +296,46 @@ class _PredictScreenState extends State<PredictScreen> {
   }
 }
 
-String _evoLabel(double change) {
-  if (change >= 8) return 'Fire';
-  if (change >= 4) return 'Hot';
-  if (change >= 0) return 'Mild';
-  if (change >= -3) return 'Cool';
-  return 'Calm';
+/// Drops every point before the current week, so the date picker only
+/// offers the present week and future (predicted) dates — no history.
+List<DatedPrice> _fromCurrentWeek(List<DatedPrice> points) {
+  final DateTime now = DateTime.now();
+  final DateTime today = DateTime(now.year, now.month, now.day);
+  final DateTime startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+  return points.where((DatedPrice p) => !p.date.isBefore(startOfWeek)).toList();
+}
+
+int _weeksFor(String horizon) {
+  switch (horizon) {
+    case '1W':
+      return 1;
+    case '2W':
+      return 2;
+    case '8W':
+      return 8;
+    case '12W':
+      return 12;
+    case '4W':
+    default:
+      return 4;
+  }
+}
+
+String _evoLabel(AppLocalizations t, double change) {
+  if (change >= 8) return t.evoFire;
+  if (change >= 4) return t.evoHot;
+  if (change >= 0) return t.evoMild;
+  if (change >= -3) return t.evoCool;
+  return t.evoCalm;
 }
 
 // ── Sub-widgets ─────────────────────────────────────────────────────────────
 
 class _PredictHeader extends StatelessWidget {
-  const _PredictHeader({required this.onBack});
+  const _PredictHeader({required this.onBack, required this.title});
 
   final VoidCallback? onBack;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -410,12 +344,13 @@ class _PredictHeader extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Text(
-            'Predict',
+            title,
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.help_outline, color: AppColors.textSecondary),
+            icon:
+                const Icon(Icons.help_outline, color: AppColors.textSecondary),
             onPressed: () {},
             iconSize: 22,
           ),
@@ -442,7 +377,8 @@ class _Pill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Icon(Icons.local_fire_department, size: 14, color: AppColors.accent),
+          const Icon(Icons.local_fire_department,
+              size: 14, color: AppColors.accent),
           const SizedBox(width: 5),
           Text(
             label,
@@ -458,43 +394,31 @@ class _Pill extends StatelessWidget {
   }
 }
 
-class _ChartLegend extends StatelessWidget {
-  const _ChartLegend({
-    required this.color,
-    required this.label,
-    this.dashed = false,
-  });
-
-  final Color color;
-  final String label;
-  final bool dashed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        SizedBox(
-          width: 18,
-          child: Divider(
-            color: color,
-            thickness: dashed ? 1.5 : 2.5,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-        ),
-      ],
-    );
-  }
+String modelFamilyLabel(String modelFamily) {
+  const Map<String, String> labels = <String, String>{
+    'sarimax': 'SARIMAX',
+    'lstm': 'LSTM',
+    'random_forest': 'Random Forest',
+    'xgboost': 'XGBoost',
+    'catboost': 'CatBoost',
+    'hybrid_xgboost_sarimax': 'Hybrid (XGBoost)',
+    'hybrid_random_forest_sarimax': 'Hybrid (Random Forest)',
+  };
+  return labels[modelFamily] ?? modelFamily;
 }
 
-class _InfluenceCard extends StatelessWidget {
-  const _InfluenceCard({required this.factor});
+class _InfoStat extends StatelessWidget {
+  const _InfoStat({
+    required this.icon,
+    required this.color,
+    required this.value,
+    required this.label,
+  });
 
-  final InfluenceFactor factor;
+  final IconData icon;
+  final Color color;
+  final String value;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -515,30 +439,32 @@ class _InfluenceCard extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: factor.color.withOpacity(0.16),
+              color: color.withValues(alpha: 0.16),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: factor.color.withOpacity(0.28),
+                  color: color.withValues(alpha: 0.28),
                   blurRadius: 12,
                 ),
               ],
             ),
-            child: Icon(factor.icon, color: factor.color, size: 18),
+            child: Icon(icon, color: color, size: 18),
           ),
           const SizedBox(height: 8),
           Text(
-            factor.weightLabel,
+            value,
+            textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: isDark ? AppColors.text : const Color(0xFF0F1F17),
             ),
           ),
           const SizedBox(height: 2),
           Text(
-            factor.title,
+            label,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            style:
+                const TextStyle(fontSize: 11, color: AppColors.textSecondary),
           ),
         ],
       ),

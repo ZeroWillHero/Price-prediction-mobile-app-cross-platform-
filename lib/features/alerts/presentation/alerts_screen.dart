@@ -9,6 +9,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/segmented_tab.dart';
 import '../../../core/widgets/vegetable_avatar.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
 class AlertsScreen extends StatelessWidget {
   const AlertsScreen({super.key});
@@ -18,7 +19,8 @@ class AlertsScreen extends StatelessWidget {
     final controller = context.watch<AppController>();
     final activeAlerts = controller.activeAlerts;
     final vegetable = controller.selectedVegetable;
-    final history = controller.repository.alertHistoryFor(vegetable.name);
+    final history = controller.repository.alertHistoryFor(vegetable.id);
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return ListView(
       padding: EdgeInsets.zero,
@@ -29,11 +31,12 @@ class AlertsScreen extends StatelessWidget {
           child: Row(
             children: <Widget>[
               Text(
-                'Price alerts',
+                t.alertsTitle,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const Spacer(),
               _CreateAlertBtn(
+                label: t.createAlert,
                 onTap: () => _openCreateSheet(context, controller),
               ),
             ],
@@ -47,8 +50,7 @@ class AlertsScreen extends StatelessWidget {
             children: <Widget>[
               SectionHeader(
                 icon: Icons.notifications_active,
-                title:
-                    'Active alerts (${activeAlerts.length})',
+                title: t.activeAlertsCount(activeAlerts.length),
               ),
               const SizedBox(height: 12),
               ...controller.alerts.map(
@@ -62,9 +64,9 @@ class AlertsScreen extends StatelessWidget {
                     child: Row(
                       children: <Widget>[
                         VegetableAvatar(
-                          name: alert.vegetableName,
+                          id: alert.vegetableId,
                           color: controller.repository
-                              .vegetableByName(alert.vegetableName)
+                              .vegetableById(alert.vegetableId)
                               .accentColor,
                           size: 48,
                           glow: alert.enabled,
@@ -75,7 +77,9 @@ class AlertsScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Text(
-                                alert.vegetableName,
+                                controller.repository
+                                    .vegetableById(alert.vegetableId)
+                                    .name,
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
@@ -92,7 +96,7 @@ class AlertsScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 3),
                               Text(
-                                'Set on ${alert.createdLabel}',
+                                t.setOn(alert.createdLabel),
                                 style: const TextStyle(
                                   fontSize: 11,
                                   color: AppColors.textMuted,
@@ -115,7 +119,7 @@ class AlertsScreen extends StatelessWidget {
 
               SectionHeader(
                 icon: Icons.history,
-                title: 'Alert history',
+                title: t.alertHistory,
               ),
               const SizedBox(height: 12),
               ...history.map(
@@ -199,10 +203,11 @@ class AlertsScreen extends StatelessWidget {
   }
 
   void _openCreateSheet(BuildContext context, AppController controller) {
-    String vegetableName = controller.selectedVegetable.name;
+    String vegetableId = controller.selectedVegetable.id;
     AlertComparison comparison = AlertComparison.above;
     final TextEditingController thresholdCtrl =
         TextEditingController(text: '350');
+    final AppLocalizations t = AppLocalizations.of(context);
 
     showModalBottomSheet<void>(
       context: context,
@@ -242,7 +247,7 @@ class AlertsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Set price alert',
+                  t.setPriceAlert,
                   style: GoogleFonts.poppins(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -256,7 +261,7 @@ class AlertsScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      value: vegetableName,
+                      value: vegetableId,
                       isExpanded: true,
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w700,
@@ -271,14 +276,14 @@ class AlertsScreen extends StatelessWidget {
                       items: controller.repository.vegetables
                           .map(
                             (v) => DropdownMenuItem<String>(
-                              value: v.name,
+                              value: v.id,
                               child: Text(v.name),
                             ),
                           )
                           .toList(),
                       onChanged: (String? val) {
                         if (val == null) return;
-                        setSheetState(() => vegetableName = val);
+                        setSheetState(() => vegetableId = val);
                       },
                     ),
                   ),
@@ -287,12 +292,12 @@ class AlertsScreen extends StatelessWidget {
 
                 // Condition tabs
                 SegmentedTab(
-                  options: const <String>['Price exceeds', 'Drops below'],
+                  options: <String>[t.priceExceeds, t.dropsBelow],
                   selected: comparison == AlertComparison.above
-                      ? 'Price exceeds'
-                      : 'Drops below',
+                      ? t.priceExceeds
+                      : t.dropsBelow,
                   onSelected: (v) => setSheetState(
-                    () => comparison = v == 'Price exceeds'
+                    () => comparison = v == t.priceExceeds
                         ? AlertComparison.above
                         : AlertComparison.below,
                   ),
@@ -307,8 +312,8 @@ class AlertsScreen extends StatelessWidget {
                   style: TextStyle(
                     color: isDark ? AppColors.text : const Color(0xFF0F1F17),
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Price threshold',
+                  decoration: InputDecoration(
+                    labelText: t.priceThreshold,
                     prefixText: 'Rs  ',
                     suffixText: '/kg',
                   ),
@@ -324,10 +329,14 @@ class AlertsScreen extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '$vegetableName alert: '
-                          '${comparison == AlertComparison.above ? 'Price hit' : 'Price dropped to'} '
-                          'Rs ${thresholdCtrl.text}/kg '
-                          '(your alert: Rs ${thresholdCtrl.text})',
+                          t.alertPreview(
+                            controller.repository.vegetableById(vegetableId).name,
+                            comparison == AlertComparison.above
+                                ? t.alertPriceHit
+                                : t.alertPriceDropped,
+                            thresholdCtrl.text,
+                            thresholdCtrl.text,
+                          ),
                           style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.textSecondary,
@@ -344,7 +353,7 @@ class AlertsScreen extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel'),
+                        child: Text(t.cancel),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -357,17 +366,17 @@ class AlertsScreen extends StatelessWidget {
                           controller.addAlert(
                             AlertRule(
                               id: DateTime.now().millisecondsSinceEpoch,
-                              vegetableName: vegetableName,
+                              vegetableId: vegetableId,
                               comparison: comparison,
                               threshold: threshold,
                               enabled: true,
-                              createdLabel: 'Today',
+                              createdLabel: t.alertToday,
                             ),
                           );
                           Navigator.pop(ctx);
                         },
                         icon: const Icon(Icons.add_alert, size: 18),
-                        label: const Text('Create alert'),
+                        label: Text(t.createAlert),
                       ),
                     ),
                   ],
@@ -382,9 +391,10 @@ class AlertsScreen extends StatelessWidget {
 }
 
 class _CreateAlertBtn extends StatelessWidget {
-  const _CreateAlertBtn({required this.onTap});
+  const _CreateAlertBtn({required this.onTap, required this.label});
 
   final VoidCallback onTap;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -406,14 +416,14 @@ class _CreateAlertBtn extends StatelessWidget {
             ),
           ],
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(Icons.add, size: 16, color: Color(0xFF1A0A00)),
-            SizedBox(width: 4),
+            const Icon(Icons.add, size: 16, color: Color(0xFF1A0A00)),
+            const SizedBox(width: 4),
             Text(
-              'Create alert',
-              style: TextStyle(
+              label,
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF1A0A00),

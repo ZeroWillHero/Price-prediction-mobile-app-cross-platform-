@@ -5,10 +5,10 @@ import '../../../core/state/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/price_formatters.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../core/widgets/mini_line_chart.dart';
 import '../../../core/widgets/price_badge.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/vegetable_avatar.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
@@ -23,12 +23,14 @@ class HomeScreen extends StatelessWidget {
     final controller = context.watch<AppController>();
     final featured = controller.featuredVegetable;
     final trending = controller.repository.trendingVegetables;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return ListView(
       padding: EdgeInsets.zero,
       children: <Widget>[
         _HomeHeader(
-          onSettings: () => context.read<AppController>().setTab(AppTab.settings),
+          onSettings: () =>
+              context.read<AppController>().setTab(AppTab.settings),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
@@ -41,7 +43,7 @@ class HomeScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(fontSize: 26),
                   children: <InlineSpan>[
                     TextSpan(
-                      text: 'Welcome back, ',
+                      text: t.homeWelcomeBack,
                       style: const TextStyle(
                         fontWeight: FontWeight.w400,
                         color: AppColors.textSecondary,
@@ -54,7 +56,6 @@ class HomeScreen extends StatelessWidget {
                         color: AppColors.text,
                       ),
                     ),
-                    const TextSpan(text: '👋'),
                   ],
                 ),
               ),
@@ -68,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(width: 10),
                   _PillBadge(
                     icon: Icons.wifi_tethering,
-                    label: 'Market stable',
+                    label: t.homeMarketStable,
                     color: AppColors.accent,
                   ),
                 ],
@@ -81,7 +82,7 @@ class HomeScreen extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 radius: 24,
                 onTap: () {
-                  context.read<AppController>().selectVegetable(featured.name);
+                  context.read<AppController>().selectVegetable(featured.id);
                   context.read<AppController>().setTab(AppTab.predict);
                 },
                 child: ClipRRect(
@@ -112,12 +113,12 @@ class HomeScreen extends StatelessWidget {
                               children: <Widget>[
                                 _PillBadge(
                                   icon: Icons.local_fire_department,
-                                  label: 'Biggest mover today',
+                                  label: t.homeBiggestMoverToday,
                                   color: const Color(0xFF06180E),
                                   bg: const Color(0x40FFFFFF),
                                 ),
                                 Text(
-                                  _evoLabel(featured.changePercent),
+                                  _evoLabel(t, featured.changePercent),
                                   style: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
@@ -128,7 +129,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 10),
                             Center(
-                              child: _HeroChip(name: featured.name, size: 116),
+                              child: _HeroChip(id: featured.id, size: 116),
                             ),
                             const SizedBox(height: 10),
                             Row(
@@ -202,8 +203,8 @@ class HomeScreen extends StatelessWidget {
               // Trending
               SectionHeader(
                 icon: Icons.trending_up,
-                title: 'Trending this week',
-                actionLabel: 'See all',
+                title: t.homeTrendingThisWeek,
+                actionLabel: t.seeAll,
               ),
               const SizedBox(height: 12),
               ...trending.map(
@@ -212,13 +213,13 @@ class HomeScreen extends StatelessWidget {
                   child: AppCard(
                     padding: const EdgeInsets.all(12),
                     onTap: () {
-                      context.read<AppController>().selectVegetable(v.name);
+                      context.read<AppController>().selectVegetable(v.id);
                       context.read<AppController>().setTab(AppTab.predict);
                     },
                     child: Row(
                       children: <Widget>[
                         VegetableAvatar(
-                          name: v.name,
+                          id: v.id,
                           color: v.accentColor,
                           size: 50,
                           glow: true,
@@ -243,17 +244,6 @@ class HomeScreen extends StatelessWidget {
                             ],
                           ),
                         ),
-                        SizedBox(
-                          width: 68,
-                          child: MiniLineChart(
-                            series: v.sparkline,
-                            color: v.changePercent >= 0
-                                ? AppColors.accent
-                                : AppColors.danger,
-                            height: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
                         PriceBadge(
                           label: formatPercent(v.changePercent),
                           positive: v.changePercent >= 0,
@@ -273,14 +263,16 @@ class HomeScreen extends StatelessWidget {
               // Alerts
               SectionHeader(
                 icon: Icons.notifications_active,
-                title: 'Active alerts',
-                actionLabel: 'Manage',
-                onAction: () => context.read<AppController>().setTab(AppTab.alerts),
+                title: t.homeActiveAlerts,
+                actionLabel: t.manage,
+                onAction: () =>
+                    context.read<AppController>().setTab(AppTab.alerts),
               ),
               const SizedBox(height: 12),
               AppCard(
                 variant: AppCardVariant.glow,
-                onTap: () => context.read<AppController>().setTab(AppTab.alerts),
+                onTap: () =>
+                    context.read<AppController>().setTab(AppTab.alerts),
                 child: Row(
                   children: <Widget>[
                     Container(
@@ -312,13 +304,13 @@ class HomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            '2 alerts triggered today',
+                            t.homeAlertsTriggeredToday(2),
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            'Carrot hit Rs 350/kg',
-                            style: TextStyle(
+                          Text(
+                            t.homeSampleAlertDetail,
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.textSecondary,
                             ),
@@ -337,17 +329,6 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 22),
 
               // Quick actions
-              FilledButton.icon(
-                onPressed: () {
-                  context
-                      .read<AppController>()
-                      .selectVegetable(controller.repository.vegetables.first.name);
-                  context.read<AppController>().setTab(AppTab.predict);
-                },
-                icon: const Icon(Icons.auto_awesome, size: 18),
-                label: const Text('Predict prices'),
-              ),
-              const SizedBox(height: 10),
               Row(
                 children: <Widget>[
                   Expanded(
@@ -355,7 +336,7 @@ class HomeScreen extends StatelessWidget {
                       onPressed: () =>
                           context.read<AppController>().setTab(AppTab.history),
                       icon: const Icon(Icons.show_chart, size: 18),
-                      label: const Text('History'),
+                      label: Text(t.navHistory),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -363,7 +344,7 @@ class HomeScreen extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: onOpenExplainability,
                       icon: const Icon(Icons.account_tree, size: 18),
-                      label: const Text('How it works'),
+                      label: Text(t.howItWorks),
                     ),
                   ),
                 ],
@@ -376,12 +357,12 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-String _evoLabel(double change) {
-  if (change >= 8) return 'Fire';
-  if (change >= 4) return 'Hot';
-  if (change >= 0) return 'Mild';
-  if (change >= -3) return 'Cool';
-  return 'Calm';
+String _evoLabel(AppLocalizations t, double change) {
+  if (change >= 8) return t.evoFire;
+  if (change >= 4) return t.evoHot;
+  if (change >= 0) return t.evoMild;
+  if (change >= -3) return t.evoCool;
+  return t.evoCalm;
 }
 
 // ── Sub-widgets ─────────────────────────────────────────────────────────────
@@ -508,14 +489,14 @@ class _PillBadge extends StatelessWidget {
 }
 
 class _HeroChip extends StatelessWidget {
-  const _HeroChip({required this.name, required this.size});
+  const _HeroChip({required this.id, required this.size});
 
-  final String name;
+  final String id;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    final String? imagePath = vegImages[name];
+    final String? imagePath = vegImages[id];
     return Container(
       width: size,
       height: size,
@@ -538,7 +519,7 @@ class _HeroChip extends StatelessWidget {
                 child: Image.asset(imagePath, fit: BoxFit.contain),
               )
             : Text(
-                name.isNotEmpty ? name.substring(0, 1) : '?',
+                id.isNotEmpty ? id.substring(0, 1).toUpperCase() : '?',
                 style: TextStyle(fontSize: size * 0.52),
               ),
       ),

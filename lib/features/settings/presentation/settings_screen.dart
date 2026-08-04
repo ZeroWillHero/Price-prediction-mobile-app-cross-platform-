@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/state/app_controller.dart';
+import '../../../core/state/auth_controller.dart';
+import '../../../core/state/locale_controller.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../l10n/gen/app_localizations.dart';
 import '../../explainability/presentation/explainability_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -11,23 +15,33 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppController controller = context.watch<AppController>();
+    final LocaleController localeController = context.watch<LocaleController>();
+    final AuthController authController = context.watch<AuthController>();
+    final AppLocalizations t = AppLocalizations.of(context);
+    final user = authController.user;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       children: <Widget>[
-        Text('Settings', style: Theme.of(context).textTheme.headlineSmall),
+        Text(t.settingsTitle, style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 12),
         AppCard(
           child: Row(
             children: <Widget>[
-              const CircleAvatar(radius: 26, child: Text('R')),
+              CircleAvatar(
+                radius: 26,
+                child: Text(user != null && user.firstName.isNotEmpty ? user.firstName[0] : '?'),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text('Ravi Perera', style: Theme.of(context).textTheme.titleLarge),
-                    Text('Farmer · Kandy District', style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      user?.fullName ?? '',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Text(user?.email ?? '', style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ),
@@ -40,7 +54,7 @@ class SettingsScreen extends StatelessWidget {
             children: <Widget>[
               _SettingRow(
                 icon: Icons.dark_mode,
-                label: 'Dark mode',
+                label: t.settingsDarkMode,
                 trailing: Switch(
                   value: controller.isDarkMode,
                   onChanged: (_) => context.read<AppController>().toggleTheme(),
@@ -48,18 +62,22 @@ class SettingsScreen extends StatelessWidget {
               ),
               _SettingRow(
                 icon: Icons.language,
-                label: 'Language',
-                trailing: Text('English · සිංහල', style: Theme.of(context).textTheme.bodySmall),
+                label: t.settingsLanguage,
+                trailing: _LanguageDropdown(
+                  value: localeController.locale ?? const Locale('en'),
+                  onChanged: (Locale locale) =>
+                      context.read<LocaleController>().setLocale(locale),
+                ),
               ),
               _SettingRow(
                 icon: Icons.wifi_off,
-                label: 'Offline mode',
+                label: t.settingsOfflineMode,
                 trailing: Switch(value: false, onChanged: (_) {}),
               ),
               _SettingRow(
                 icon: Icons.notifications,
-                label: 'Notifications',
-                trailing: Text('On', style: Theme.of(context).textTheme.bodySmall),
+                label: t.settingsNotifications,
+                trailing: Text(t.settingsNotificationsOn, style: Theme.of(context).textTheme.bodySmall),
                 isLast: true,
               ),
             ],
@@ -71,7 +89,7 @@ class SettingsScreen extends StatelessWidget {
             children: <Widget>[
               _SettingRow(
                 icon: Icons.psychology,
-                label: 'How predictions work',
+                label: t.settingsHowPredictionsWork,
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(context).push(
@@ -83,20 +101,92 @@ class SettingsScreen extends StatelessWidget {
               ),
               _SettingRow(
                 icon: Icons.shield,
-                label: 'Privacy & data',
+                label: t.settingsPrivacyData,
                 trailing: const Icon(Icons.chevron_right),
                 isLast: true,
               ),
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        AppCard(
+          child: _SettingRow(
+            icon: Icons.logout,
+            label: t.logout,
+            trailing: const SizedBox.shrink(),
+            isLast: true,
+            onTap: () => _confirmLogout(context, t),
+          ),
+        ),
         const SizedBox(height: 16),
         Text(
-          'vege_price v1.0.0',
+          t.appVersion,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
+    );
+  }
+
+  Future<void> _confirmLogout(BuildContext context, AppLocalizations t) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: Text(t.logoutConfirmTitle),
+        content: Text(t.logoutConfirmMessage),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(t.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(t.logout),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await context.read<AuthController>().logout();
+    }
+  }
+}
+
+class _LanguageDropdown extends StatelessWidget {
+  const _LanguageDropdown({required this.value, required this.onChanged});
+
+  final Locale value;
+  final ValueChanged<Locale> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
+    final Map<String, String> labels = <String, String>{
+      'en': t.languageEnglish,
+      'si': t.languageSinhala,
+      'ta': t.languageTamil,
+    };
+
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: value.languageCode,
+        isDense: true,
+        icon: const Icon(Icons.expand_more, size: 18),
+        style: Theme.of(context).textTheme.bodySmall,
+        items: labels.entries
+            .map(
+              (MapEntry<String, String> e) => DropdownMenuItem<String>(
+                value: e.key,
+                child: Text(e.value),
+              ),
+            )
+            .toList(),
+        onChanged: (String? code) {
+          if (code == null) return;
+          onChanged(Locale(code));
+        },
+      ),
     );
   }
 }
@@ -124,7 +214,7 @@ class _SettingRow extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),

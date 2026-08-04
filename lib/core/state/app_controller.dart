@@ -1,38 +1,63 @@
 import 'package:flutter/material.dart';
 
-import '../data/mock_market_repository.dart';
+import '../data/api_market_repository.dart';
 import '../models/alert_models.dart';
 import '../models/vegetable_summary.dart';
+import '../network/vege_predict_api.dart';
 
 enum AppTab { home, predict, history, alerts, settings }
 
-class AppController extends ChangeNotifier {
-  AppController(this.repository)
-      : _selectedVegetableName = repository.featuredVegetable.name,
-        _alerts = repository.initialAlerts
-            .map((AlertRule rule) => rule.copyWith())
-            .toList(growable: true);
+enum LoadState { loading, ready, error }
 
-  final MockMarketRepository repository;
+class AppController extends ChangeNotifier {
+  AppController(this.repository);
+
+  final ApiMarketRepository repository;
+
+  LoadState _loadState = LoadState.loading;
+  String? _errorMessage;
 
   AppTab _tab = AppTab.home;
   bool _isDarkMode = true;
-  String _selectedVegetableName;
+  String _selectedVegetableId = '';
   String _selectedHorizon = '4W';
-  final List<AlertRule> _alerts;
+  List<AlertRule> _alerts = <AlertRule>[];
+
+  LoadState get loadState => _loadState;
+  String? get errorMessage => _errorMessage;
 
   AppTab get tab => _tab;
   ThemeMode get themeMode => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
   bool get isDarkMode => _isDarkMode;
-  String get selectedVegetableName => _selectedVegetableName;
+  String get selectedVegetableId => _selectedVegetableId;
   String get selectedHorizon => _selectedHorizon;
   List<AlertRule> get alerts => List<AlertRule>.unmodifiable(_alerts);
   List<AlertRule> get activeAlerts =>
       _alerts.where((AlertRule rule) => rule.enabled).toList(growable: false);
 
-  VegetableSummary get selectedVegetable =>
-      repository.vegetableByName(_selectedVegetableName);
+  VegetableSummary get selectedVegetable => repository.vegetableById(_selectedVegetableId);
   VegetableSummary get featuredVegetable => repository.featuredVegetable;
+
+  Future<void> initialize() async {
+    _loadState = LoadState.loading;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await repository.load();
+      _selectedVegetableId = repository.featuredVegetable.id;
+      _alerts = repository.initialAlerts.map((AlertRule rule) => rule.copyWith()).toList(
+            growable: true,
+          );
+      _loadState = LoadState.ready;
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      _loadState = LoadState.error;
+    } catch (_) {
+      _errorMessage = 'Something went wrong. Please try again.';
+      _loadState = LoadState.error;
+    }
+    notifyListeners();
+  }
 
   void setTab(AppTab tab) {
     if (_tab == tab) {
@@ -42,11 +67,11 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void selectVegetable(String name) {
-    if (_selectedVegetableName == name) {
+  void selectVegetable(String id) {
+    if (_selectedVegetableId == id) {
       return;
     }
-    _selectedVegetableName = name;
+    _selectedVegetableId = id;
     notifyListeners();
   }
 

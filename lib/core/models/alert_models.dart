@@ -3,7 +3,7 @@ enum AlertComparison { above, below }
 class AlertRule {
   const AlertRule({
     required this.id,
-    required this.vegetableName,
+    required this.vegetableId,
     required this.comparison,
     required this.threshold,
     required this.enabled,
@@ -11,7 +11,9 @@ class AlertRule {
   });
 
   final int id;
-  final String vegetableName;
+
+  /// Backend vegetable identifier (e.g. `snake_gourd`).
+  final String vegetableId;
   final AlertComparison comparison;
   final double threshold;
   final bool enabled;
@@ -25,7 +27,7 @@ class AlertRule {
 
   AlertRule copyWith({
     int? id,
-    String? vegetableName,
+    String? vegetableId,
     AlertComparison? comparison,
     double? threshold,
     bool? enabled,
@@ -33,7 +35,7 @@ class AlertRule {
   }) {
     return AlertRule(
       id: id ?? this.id,
-      vegetableName: vegetableName ?? this.vegetableName,
+      vegetableId: vegetableId ?? this.vegetableId,
       comparison: comparison ?? this.comparison,
       threshold: threshold ?? this.threshold,
       enabled: enabled ?? this.enabled,

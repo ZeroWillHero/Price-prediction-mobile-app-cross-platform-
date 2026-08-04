@@ -9,6 +9,7 @@ import '../../history/presentation/history_screen.dart';
 import '../../home/presentation/home_screen.dart';
 import '../../predict/presentation/predict_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({super.key});
@@ -16,6 +17,7 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<AppController>();
+    final AppLocalizations t = AppLocalizations.of(context);
     final List<Widget> pages = <Widget>[
       HomeScreen(onOpenExplainability: () => _openExplainability(context)),
       PredictScreen(onOpenExplainability: () => _openExplainability(context)),
@@ -42,31 +44,31 @@ class AppShell extends StatelessWidget {
           onDestinationSelected: (int index) {
             context.read<AppController>().setTab(AppTab.values[index]);
           },
-          destinations: const <NavigationDestination>[
+          destinations: <NavigationDestination>[
             NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Home',
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: const Icon(Icons.home),
+              label: t.navHome,
             ),
             NavigationDestination(
-              icon: Icon(Icons.auto_awesome_outlined),
-              selectedIcon: Icon(Icons.auto_awesome),
-              label: 'Predict',
+              icon: const Icon(Icons.auto_awesome_outlined),
+              selectedIcon: const Icon(Icons.auto_awesome),
+              label: t.navPredict,
             ),
             NavigationDestination(
-              icon: Icon(Icons.show_chart_outlined),
-              selectedIcon: Icon(Icons.show_chart),
-              label: 'History',
+              icon: const Icon(Icons.show_chart_outlined),
+              selectedIcon: const Icon(Icons.show_chart),
+              label: t.navHistory,
             ),
             NavigationDestination(
-              icon: Icon(Icons.notifications_outlined),
-              selectedIcon: Icon(Icons.notifications),
-              label: 'Alerts',
+              icon: const Icon(Icons.notifications_outlined),
+              selectedIcon: const Icon(Icons.notifications),
+              label: t.navAlerts,
             ),
             NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
-              label: 'Settings',
+              icon: const Icon(Icons.settings_outlined),
+              selectedIcon: const Icon(Icons.settings),
+              label: t.navSettings,
             ),
           ],
         ),

@@ -45,19 +45,6 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen> {
             color: isDark ? AppColors.text : const Color(0xFF0F1F17),
           ),
         ),
-        actions: <Widget>[
-          SizedBox(
-            width: 120,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-              child: SegmentedTab(
-                options: const <String>['EN', 'සිං'],
-                selected: _lang,
-                onSelected: (l) => setState(() => _lang = l),
-              ),
-            ),
-          ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
@@ -89,25 +76,25 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen> {
 
           // Layer cards
           ...layers.asMap().entries.expand(
-            (entry) => <Widget>[
-              _LayerCard(
-                index: entry.key,
-                layer: entry.value,
-                lang: _lang,
-              ),
-              if (entry.key < layers.length - 1)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Center(
-                    child: Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 22,
-                      color: AppColors.textMuted,
-                    ),
+                (entry) => <Widget>[
+                  _LayerCard(
+                    index: entry.key,
+                    layer: entry.value,
+                    lang: _lang,
                   ),
-                ),
-            ],
-          ),
+                  if (entry.key < layers.length - 1)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Center(
+                        child: Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 22,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
           const SizedBox(height: 8),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),

@@ -2,35 +2,30 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/models/trend_point.dart';
+import '../../../core/models/dated_price.dart';
 import '../../../core/state/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../core/widgets/mini_line_chart.dart';
-import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/segmented_tab.dart';
+import '../../../core/widgets/price_date_explorer.dart';
 import '../../../core/widgets/stat_card.dart';
 import '../../../core/widgets/vegetable_avatar.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
-class HistoryScreen extends StatefulWidget {
+class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
-
-  @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
-}
-
-class _HistoryScreenState extends State<HistoryScreen> {
-  String _range = '3M';
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<AppController>();
     final vegetable = controller.selectedVegetable;
-    final history = controller.repository.historyFor(vegetable.name);
-    final stats = _buildStats(history);
+    final List<DatedPrice> prices =
+        controller.repository.pricesFor(vegetable.id);
+    final stats = _historyStats(prices);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return ListView(
       padding: EdgeInsets.zero,
@@ -41,7 +36,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           child: Row(
             children: <Widget>[
               Text(
-                'Price history',
+                t.historyTitle,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const Spacer(),
@@ -65,7 +60,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Row(
                   children: <Widget>[
                     VegetableAvatar(
-                      name: vegetable.name,
+                      id: vegetable.id,
                       color: vegetable.accentColor,
                       size: 44,
                       glow: true,
@@ -73,14 +68,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     const SizedBox(width: 12),
                     DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
-                        value: vegetable.name,
+                        value: vegetable.id,
                         isExpanded: false,
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
-                          color: isDark ? AppColors.text : const Color(0xFF0F1F17),
+                          color:
+                              isDark ? AppColors.text : const Color(0xFF0F1F17),
                         ),
-                        dropdownColor: isDark ? AppColors.surface2 : Colors.white,
+                        dropdownColor:
+                            isDark ? AppColors.surface2 : Colors.white,
                         icon: const Icon(
                           Icons.keyboard_arrow_down,
                           color: AppColors.textMuted,
@@ -88,7 +85,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         items: controller.repository.vegetables
                             .map(
                               (v) => DropdownMenuItem<String>(
-                                value: v.name,
+                                value: v.id,
                                 child: Text(v.name),
                               ),
                             )
@@ -104,13 +101,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Range tabs
-              SegmentedTab(
-                options: const <String>['1M', '3M', '6M', '1Y', 'All'],
-                selected: _range,
-                onSelected: (r) => setState(() => _range = r),
-              ),
-              const SizedBox(height: 14),
+              // Pick any date and see its recorded or predicted price
+              PriceDateExplorer(points: prices),
+              const SizedBox(height: 18),
 
               // Stats 2x2
               Row(
@@ -118,7 +111,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Expanded(
                     child: StatCard(
                       icon: Icons.arrow_downward,
-                      label: 'Min price',
+                      label: t.minPrice,
                       value: 'Rs ${stats.min.toStringAsFixed(0)}',
                       subLabel: stats.minLabel,
                       color: AppColors.success,
@@ -128,7 +121,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Expanded(
                     child: StatCard(
                       icon: Icons.arrow_upward,
-                      label: 'Max price',
+                      label: t.maxPrice,
                       value: 'Rs ${stats.max.toStringAsFixed(0)}',
                       subLabel: stats.maxLabel,
                       color: AppColors.danger,
@@ -142,202 +135,60 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Expanded(
                     child: StatCard(
                       icon: Icons.remove,
-                      label: 'Average',
+                      label: t.average,
                       value: 'Rs ${stats.avg.toStringAsFixed(0)}',
-                      subLabel: 'This period',
+                      subLabel: t.thisPeriod,
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: StatCard(
                       icon: Icons.show_chart,
-                      label: 'Volatility',
+                      label: t.volatility,
                       value: 'Rs ${stats.volatility.toStringAsFixed(0)}',
-                      subLabel: 'Std dev',
+                      subLabel: t.stdDev,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-
-              // Chart card with crisis overlay
-              AppCard(
-                padding: const EdgeInsets.all(14),
-                child: Stack(
-                  children: <Widget>[
-                    Positioned(
-                      left: MediaQuery.of(context).size.width * 0.30,
-                      top: 20,
-                      bottom: 36,
-                      right: MediaQuery.of(context).size.width * 0.24,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.danger.withOpacity(0.09),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: AppColors.danger.withOpacity(0.18),
-                          ),
-                        ),
-                      ),
-                    ),
-                    ForecastLineChart(
-                      actual: history,
-                      xgboost: const <TrendPoint>[],
-                      hybrid: const <TrendPoint>[],
-                      labels: const <String>[
-                        'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
-                        'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb',
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              // Legend
-              Wrap(
-                spacing: 18,
-                runSpacing: 8,
-                children: <Widget>[
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: AppColors.danger.withOpacity(0.28),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Crisis period',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Icon(Icons.cloud, size: 14, color: AppColors.info),
-                      SizedBox(width: 6),
-                      Text(
-                        'Weather alert',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-
-              // Crisis events
-              SectionHeader(
-                icon: Icons.warning_amber_rounded,
-                title: 'Crisis events',
-              ),
-              const SizedBox(height: 12),
-              ...controller.repository.eventsFor(vegetable.name).map(
-                    (event) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: AppCard(
-                        padding: const EdgeInsets.all(13),
-                        child: Row(
-                          children: <Widget>[
-                            Text(event.emoji, style: const TextStyle(fontSize: 18)),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    event.title,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14,
-                                      color: AppColors.text,
-                                    ),
-                                  ),
-                                  Text(
-                                    event.period,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.danger.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(
-                                  color: AppColors.danger.withOpacity(0.22),
-                                ),
-                              ),
-                              child: Text(
-                                event.deltaLabel,
-                                style: const TextStyle(
-                                  color: AppColors.danger,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-              const SizedBox(height: 8),
-
-              FilledButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.picture_as_pdf, size: 18),
-                label: const Text('Export as PDF'),
-              ),
             ],
           ),
         ),
       ],
     );
   }
+}
 
-  _HistoryStats _buildStats(List<TrendPoint> history) {
-    final List<double> values =
-        history.map((TrendPoint p) => p.value).toList();
-    final double min =
-        values.reduce((double a, double b) => a < b ? a : b);
-    final double max =
-        values.reduce((double a, double b) => a > b ? a : b);
-    final double avg =
-        values.fold<double>(0, (double s, double v) => s + v) / values.length;
-    final double variance = values.fold<double>(
-          0,
-          (double s, double v) => s + (v - avg) * (v - avg),
-        ) /
-        values.length;
-    return _HistoryStats(
-      min: min,
-      max: max,
-      avg: avg,
-      volatility: math.sqrt(variance),
-      minLabel: '12 May',
-      maxLabel: '3 Jun',
-    );
+_HistoryStats _historyStats(List<DatedPrice> prices) {
+  final List<DatedPrice> recorded =
+      prices.where((DatedPrice p) => !p.isPredicted).toList();
+  final List<double> values = recorded.map((DatedPrice p) => p.price).toList();
+  if (values.isEmpty) {
+    return const _HistoryStats(
+        min: 0, max: 0, avg: 0, volatility: 0, minLabel: '', maxLabel: '');
   }
+  final DatedPrice minPoint = recorded.reduce(
+    (DatedPrice a, DatedPrice b) => a.price < b.price ? a : b,
+  );
+  final DatedPrice maxPoint = recorded.reduce(
+    (DatedPrice a, DatedPrice b) => a.price > b.price ? a : b,
+  );
+  final double avg =
+      values.fold<double>(0, (double s, double v) => s + v) / values.length;
+  final double variance = values.fold<double>(
+        0,
+        (double s, double v) => s + (v - avg) * (v - avg),
+      ) /
+      values.length;
+  return _HistoryStats(
+    min: minPoint.price,
+    max: maxPoint.price,
+    avg: avg,
+    volatility: math.sqrt(variance),
+    minLabel: DateFormat('d MMM').format(minPoint.date),
+    maxLabel: DateFormat('d MMM').format(maxPoint.date),
+  );
 }
 
 class _HistoryStats {
