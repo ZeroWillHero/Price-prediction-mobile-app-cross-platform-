@@ -39,11 +39,7 @@ class HistoryScreen extends StatelessWidget {
                 t.historyTitle,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
-              const Spacer(),
-              _IconBtn(
-                icon: Icons.download,
-                onTap: () {},
-              ),
+
             ],
           ),
         ),
