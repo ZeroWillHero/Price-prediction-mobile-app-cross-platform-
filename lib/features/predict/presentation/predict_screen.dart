@@ -56,7 +56,7 @@ class PredictScreen extends StatelessWidget {
                     color: isDark
                         ? const Color(0x0DE2EDE7)
                         : const Color(0x0A0F1F17),
-                  ),
+                  ), 
                 ),
               ),
               Column(
@@ -269,14 +269,6 @@ class PredictScreen extends StatelessWidget {
 
               Row(
                 children: <Widget>[
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.share_outlined, size: 18),
-                      label: Text(t.share),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () =>

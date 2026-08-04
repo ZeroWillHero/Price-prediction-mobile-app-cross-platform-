@@ -30,7 +30,7 @@ class SettingsScreen extends StatelessWidget {
             children: <Widget>[
               CircleAvatar(
                 radius: 26,
-                child: Text(user != null && user.firstName.isNotEmpty ? user.firstName[0] : '?'),
+                child: Text(user != null && user.firstName.isNotEmpty ? user.firstName[0] : 'U'),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -38,7 +38,7 @@ class SettingsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      user?.fullName ?? '',
+                      user?.fullName ?? 'User',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     Text(user?.email ?? '', style: Theme.of(context).textTheme.bodySmall),
@@ -108,16 +108,7 @@ class SettingsScreen extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        AppCard(
-          child: _SettingRow(
-            icon: Icons.logout,
-            label: t.logout,
-            trailing: const SizedBox.shrink(),
-            isLast: true,
-            onTap: () => _confirmLogout(context, t),
-          ),
-        ),
+        
         const SizedBox(height: 16),
         Text(
           t.appVersion,
@@ -126,30 +117,6 @@ class SettingsScreen extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Future<void> _confirmLogout(BuildContext context, AppLocalizations t) async {
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext ctx) => AlertDialog(
-        title: Text(t.logoutConfirmTitle),
-        content: Text(t.logoutConfirmMessage),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(t.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(t.logout),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true && context.mounted) {
-      await context.read<AuthController>().logout();
-    }
   }
 }
 

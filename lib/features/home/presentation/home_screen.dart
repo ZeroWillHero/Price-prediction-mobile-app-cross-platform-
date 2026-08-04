@@ -50,7 +50,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     TextSpan(
-                      text: 'Ravi ',
+                      text: '',
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         color: AppColors.text,
@@ -430,7 +430,7 @@ class _HomeHeader extends StatelessWidget {
               ),
               child: const Center(
                 child: Text(
-                  'R',
+                  'U',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
